@@ -1,0 +1,106 @@
+﻿@page
+@using Microsoft.AspNetCore.Identity
+@{
+    ViewData["Title"] = "SmartPark MWBot";
+    var isAuth = User.Identity?.IsAuthenticated ?? false;
+    var isAdmin = User.IsInRole("Admin");
+}
+
+<div class="py-4 text-center">
+    <h1 class="display-5 fw-bold">SmartPark MWBot</h1>
+    <p class="lead text-muted mb-0">Parcheggio smart con ricarica wireless mobile</p>
+</div>
+
+@if (!isAuth)
+{
+    <div class="p-5 mb-4 bg-light rounded-3">
+        <div class="container-fluid py-5">
+            <h2 class="display-6">Benvenuto!</h2>
+            <p class="col-md-8 fs-5">
+                Accedi o registrati per gestire le tue auto, aprire una sessione di parcheggio e richiedere la ricarica.
+            </p>
+            <a class="btn btn-primary btn-lg me-2" asp-area="Identity" asp-page="/Account/Login">Accedi</a>
+            <a class="btn btn-outline-secondary btn-lg" asp-area="Identity" asp-page="/Account/Register">Registrati</a>
+        </div>
+    </div>
+}
+else
+{
+    <h3 class="mt-4 mb-3">Area utente</h3>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title mb-2">Le mie auto</h5>
+                    <p class="card-text text-muted flex-grow-1">
+                        Gestisci la tua flotta: aggiungi o rimuovi veicoli.
+                    </p>
+                    <a class="btn btn-primary mt-auto" asp-page="/Cars/Index">Vai alle mie auto</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title mb-2">Parcheggio</h5>
+                    <p class="card-text text-muted flex-grow-1">
+                        Apri una nuova sessione, richiedi la ricarica e chiudi con checkout.
+                    </p>
+                    <a class="btn btn-primary mt-auto" asp-page="/Sessions/Index">Vai alle sessioni</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (isAdmin)
+    {
+        <h3 class="mt-5 mb-3">Area amministratore</h3>
+        <div class="row g-3">
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title mb-2">MWBot</h5>
+                        <p class="card-text text-muted flex-grow-1">Coda ricariche e simulazione Start/Finish.</p>
+                        <a class="btn btn-outline-primary mt-auto" asp-page="/Admin/MWBot/Index">Apri MWBot</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title mb-2">Pagamenti</h5>
+                        <p class="card-text text-muted flex-grow-1">Report per periodo, sosta/ricarica, Base/Premium.</p>
+                        <a class="btn btn-outline-primary mt-auto" asp-page="/Admin/Payments/Index">Apri pagamenti</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title mb-2">Stato parcheggio</h5>
+                        <p class="card-text text-muted flex-grow-1">Monitor occupazione posti.</p>
+                        <a class="btn btn-outline-primary mt-auto" asp-page="/Admin/Spots/Index">Apri stato parcheggio</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title mb-2">Tariffe</h5>
+                        <p class="card-text text-muted flex-grow-1">Visualizza e imposta una nuova tariffa.</p>
+                        <a class="btn btn-outline-primary mt-auto" asp-page="/Admin/Tariffs/Index">Apri tariffe</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title mb-2">Gestione utenti</h5>
+                        <p class="card-text text-muted flex-grow-1">Base/Premium, sconti e ruolo Admin.</p>
+                        <a class="btn btn-outline-primary mt-auto" asp-page="/Admin/Users/Index">Apri utenti</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}

@@ -1,0 +1,65 @@
+﻿@page "{id}"
+@model SmartPark.MWBot.Pages.Admin.Users.EditModel
+@{
+    ViewData["Title"] = "Modifica utente";
+}
+
+<h2>Modifica utente</h2>
+
+@* Riepilogo errori di validazione lato server (DataAnnotations + eventuali ModelState.AddModelError) *@
+@if (!ViewContext.ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        @foreach (var e in ViewContext.ViewData.ModelState.Values.SelectMany(v => v.Errors))
+        {
+            <div>@e.ErrorMessage</div>
+        }
+    </div>
+}
+
+<div class="card">
+    <div class="card-body">
+        @* Dati “read-only” dell’utente (email); l’Id è passato come route parameter "{id}" *@
+        <dl class="row">
+            <dt class="col-sm-3">Email</dt>
+            <dd class="col-sm-9">@Model.UserEmail</dd>
+        </dl>
+
+        @* Form di modifica: invia POST allo stesso page handler (OnPost) *@
+        <form method="post">
+            @* Id nascosto per legare la POST all’utente corretto *@
+            <input type="hidden" asp-for="Input.Id" />
+
+            @* Tipo utente (Base/Premium) mappato sull'enum UserType *@
+            <div class="mb-3">
+                <label class="form-label">Tipo utente</label>
+                <select asp-for="Input.Type" class="form-select">
+                    <option value="0">Base</option>
+                    <option value="1">Premium</option>
+                </select>
+            </div>
+
+            @* Sconti memorizzati come frazioni (0..1): 0.1=10%, 0.15=15% *@
+            <div class="mb-3">
+                <label class="form-label">Sconto sosta (0–1)</label>
+                <input asp-for="Input.ParkingDiscount" class="form-control" placeholder="es. 0.1 = 10%" />
+                <span asp-validation-for="Input.ParkingDiscount" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Sconto ricarica (0–1)</label>
+                <input asp-for="Input.ChargingDiscount" class="form-control" placeholder="es. 0.15 = 15%" />
+                <span asp-validation-for="Input.ChargingDiscount" class="text-danger"></span>
+            </div>
+
+            @* Azioni: salva modifiche o torna alla lista *@
+            <button type="submit" class="btn btn-primary">Salva</button>
+            <a asp-page="Index" class="btn btn-secondary ms-2">Annulla</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @* Abilita validazione client-side (jquery.validate + unobtrusive) per i DataAnnotations *@
+    <partial name="_ValidationScriptsPartial" />
+}

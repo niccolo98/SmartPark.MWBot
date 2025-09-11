@@ -1,0 +1,34 @@
+﻿@page
+@model SmartPark.MWBot.Pages.Admin.Spots.IndexModel
+@{
+    ViewData["Title"] = "Monitor Posti";
+}
+
+<h2>Monitor Posti</h2>
+
+@* Tabella semplice di monitoraggio:
+   - una riga per ogni ParkingSpot
+   - mostra codice posto, stato occupazione e ultimo timestamp del "sensore"
+   Nota: gli orari sono mostrati in UTC (come da modello). *@
+<table class="table">
+    <thead>
+        <tr>
+            <th>Codice</th>
+            <th>Occupato</th>
+            <th>Ultimo Update (UTC)</th>
+        </tr>
+    </thead>
+    <tbody>
+        @* Itera tutti i posti caricati nel PageModel (Items) *@
+        @foreach (var p in Model.Items)
+        {
+            <tr>
+                <td>@p.Code</td>
+                @* Rende lo stato booleano come "Sì"/"No" per leggibilità *@
+                <td>@(p.IsOccupied ? "Sì" : "No")</td>
+                @* Timestamp aggiornato quando la sessione occupa/libera il posto (SensorLastUpdateUtc) *@
+                <td>@p.SensorLastUpdateUtc</td>
+            </tr>
+        }
+    </tbody>
+</table>

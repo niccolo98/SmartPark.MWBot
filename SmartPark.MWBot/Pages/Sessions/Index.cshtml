@@ -1,0 +1,54 @@
+﻿@page
+@model SmartPark.MWBot.Pages.Sessions.IndexModel
+@{
+    ViewData["Title"] = "Sessioni aperte";
+}
+<h2>Sessioni di parcheggio (aperte)</h2>
+
+@* Link per creare una nuova sessione di parcheggio (porta alla pagina Create) *@
+<p>
+    <a asp-page="Create" class="btn btn-primary">Nuova sessione</a>
+</p>
+
+@* Messaggio flash informativo (es. da Checkout o altre azioni) *@
+@if (TempData["Msg"] is string msg && !string.IsNullOrWhiteSpace(msg))
+{
+    <div class="alert alert-success">@msg</div>
+}
+
+@* Stato vuoto: nessuna sessione aperta per l'utente corrente *@
+@if (Model.Items.Count == 0)
+{
+    <p>Nessuna sessione aperta.</p>
+}
+else
+{
+    @* Tabella con l’elenco delle sessioni aperte (caricate nel PageModel con ListOpenByUserAsync) *@
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Posto</th>
+                <th>Auto</th>
+                <th>Inizio (UTC)</th>
+                <th>Azioni</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var s in Model.Items)
+            {
+                <tr>
+                    <td>@s.ParkingSpot?.Code</td>
+                    <td>@($"{s.Car?.Plate} - {s.Car?.CarModel?.Make} {s.Car?.CarModel?.Model}")</td>
+                    <td>@s.StartUtc</td>
+                    <td>
+                        @* Richiesta ricarica: apre la pagina di richiesta/accettazione per questa sessione *@
+                        <a asp-page="RequestCharge" asp-route-id="@s.Id" class="btn btn-sm btn-outline-primary">Richiedi ricarica</a>
+
+                        @* Checkout: chiude la sessione, libera il posto e genera il pagamento (pagina di conferma) *@
+                        <a asp-page="Checkout" asp-route-id="@s.Id" class="btn btn-sm btn-success ms-1">Chiudi &amp; Checkout</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

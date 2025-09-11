@@ -1,0 +1,59 @@
+﻿@page "{id:int}"
+@model SmartPark.MWBot.Pages.Sessions.ConfirmChargeModel
+@{
+    ViewData["Title"] = "Conferma ricarica";
+}
+
+<h2>Conferma ricarica</h2>
+
+@* Se la richiesta non esiste o non è accessibile dall’utente, mostro errore *@
+@if (Model.RequestItem is null)
+{
+    <div class="alert alert-danger">Richiesta non trovata.</div>
+}
+else
+{
+    var r = Model.RequestItem;
+
+    @* Riepilogo della richiesta di ricarica: posto, auto e target SoC (più SoC iniziale se disponibile) *@
+    <div class="card mb-3">
+        <div class="card-body">
+            <div><strong>Posto:</strong> @r.ParkingSession?.ParkingSpot?.Code</div>
+            <div><strong>Auto:</strong> @r.ParkingSession?.Car?.Plate - @r.ParkingSession?.Car?.CarModel?.Make @r.ParkingSession?.Car?.CarModel?.Model</div>
+            <div><strong>Target SoC:</strong> @r.TargetSoCPercent %</div>
+            @if (r.InitialSoCPercent.HasValue)
+            {
+                <div><strong>SoC attuale:</strong> @r.InitialSoCPercent %</div>
+            }
+        </div>
+    </div>
+
+    @* Stima semplice di attesa e completamento calcolata lato server in fase di richiesta *@
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5>Stima attesa</h5>
+            <ul class="mb-2">
+                <li>Auto in coda prima di te: @((r.EstimatedWaitMinutes ?? 0) / 30)</li>
+                <li>Attesa stimata: @(r.EstimatedWaitMinutes ?? 0) min</li>
+                <li>Completamento stimato: @(r.EstimatedCompletionMinutes ?? 0) min</li>
+            </ul>
+            <div class="text-muted">Si tratta di una stima indicativa.</div>
+        </div>
+    </div>
+
+    @* Azioni utente:
+       - Accetta: la richiesta passa a Pending e viene creato un ChargeJob (Queued)
+       - Rifiuta: la richiesta viene marcata come Cancelled
+       Entrambi gli handler sono implementati nel PageModel (OnPostAcceptAsync/OnPostRejectAsync) *@
+    <form method="post" asp-page-handler="Accept" class="d-inline">
+        <button type="submit" class="btn btn-primary">Accetta</button>
+    </form>
+    <form method="post" asp-page-handler="Reject" class="d-inline ms-2">
+        <button type="submit" class="btn btn-outline-secondary">Rifiuta</button>
+    </form>
+
+    @* Link di comodità per tornare alla lista delle sessioni *@
+    <div class="mt-3">
+        <a asp-page="Index" class="btn btn-link">Torna alle sessioni</a>
+    </div>
+}

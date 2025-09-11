@@ -1,0 +1,103 @@
+﻿@page
+@model SmartPark.MWBot.Pages.Admin.Payments.IndexModel
+@{
+    ViewData["Title"] = "Report Pagamenti";
+}
+
+<h2>Report pagamenti</h2>
+
+@* --- Filtro per intervallo temporale (From/To in locale) --- *@
+<form method="get" class="row g-2 mb-3">
+    <div class="col-auto">
+        <label class="form-label">Da</label>
+        <input asp-for="From" class="form-control" type="datetime-local" />
+    </div>
+    <div class="col-auto">
+        <label class="form-label">A</label>
+        <input asp-for="To" class="form-control" type="datetime-local" />
+    </div>
+    <div class="col-auto align-self-end">
+        <button class="btn btn-primary" type="submit">Filtra</button>
+    </div>
+</form>
+
+@* --- Messaggio quando non ci sono dati nel range selezionato --- *@
+@if (Model.CountPayments == 0)
+{
+    <div class="alert alert-info">Nessun pagamento nel periodo selezionato.</div>
+}
+else
+{
+    @* --- Riepiloghi a colpo d’occhio: complessivo, base, premium --- *@
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Totali complessivi</h5>
+                    <div>Pagamenti: <strong>@Model.CountPayments</strong></div>
+                    <div>Sosta: <strong>€ @Model.TotalParking.ToString("0.00")</strong></div>
+                    <div>Ricarica: <strong>€ @Model.TotalCharging.ToString("0.00")</strong></div>
+                    <hr />
+                    <div>Totale: <strong>€ @Model.GrandTotal.ToString("0.00")</strong></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mt-3 mt-md-0">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Utenti Base</h5>
+                    <div>Pagamenti: <strong>@Model.CountBase</strong></div>
+                    <div>Sosta: <strong>€ @Model.TotalParkingBase.ToString("0.00")</strong></div>
+                    <div>Ricarica: <strong>€ @Model.TotalChargingBase.ToString("0.00")</strong></div>
+                    <hr />
+                    @* Nota Razor: tutta l’espressione di somma va dentro @(...) prima del ToString *@
+                    <div>Totale: <strong>€ @((Model.TotalParkingBase + Model.TotalChargingBase).ToString("0.00"))</strong></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mt-3 mt-md-0">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Utenti Premium</h5>
+                    <div>Pagamenti: <strong>@Model.CountPremium</strong></div>
+                    <div>Sosta: <strong>€ @Model.TotalParkingPremium.ToString("0.00")</strong></div>
+                    <div>Ricarica: <strong>€ @Model.TotalChargingPremium.ToString("0.00")</strong></div>
+                    <hr />
+                    <div>Totale: <strong>€ @((Model.TotalParkingPremium + Model.TotalChargingPremium).ToString("0.00"))</strong></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* --- Tabella di dettaglio: ogni riga è un Payment con breakdown sosta/ricarica --- *@
+    <h4>Dettaglio pagamenti</h4>
+    <table class="table table-sm">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Data (locale)</th>
+                <th>Utente</th>
+                <th>Tipo</th>
+                <th>Sosta (€)</th>
+                <th>Ricarica (€)</th>
+                <th>Totale (€)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @* Ordinamento discendente per CreatedUtc (mostra prima i più recenti) *@
+            @foreach (var r in Model.Items.OrderByDescending(i => i.CreatedUtc))
+            {
+                <tr>
+                    <td>@r.Id</td>
+                    @* CreatedLocal è già preparato nel PageModel per la resa locale *@
+                    <td>@r.CreatedLocal</td>
+                    <td>@(r.UserEmail ?? r.UserId)</td>
+                    <td>@r.UserTypeAtPayment</td>
+                    <td>@r.Parking.ToString("0.00")</td>
+                    <td>@r.Charging.ToString("0.00")</td>
+                    <td><strong>@r.Total.ToString("0.00")</strong></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

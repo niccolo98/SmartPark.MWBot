@@ -1,0 +1,61 @@
+﻿@page "{id:int}"
+@model SmartPark.MWBot.Pages.Sessions.CheckoutModel
+@{
+    ViewData["Title"] = "Checkout";
+}
+
+<h2>Checkout sessione</h2>
+
+@* Riepilogo errori di validazione lato server (es. nessuna tariffa attiva, ecc.) *@
+@if (!ViewContext.ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        @foreach (var e in ViewContext.ViewData.ModelState.Values.SelectMany(v => v.Errors))
+        {
+            <div>@e.ErrorMessage</div>
+        }
+    </div>
+}
+
+@* Se la sessione non è stata trovata o non è dell'utente corrente *@
+@if (Model.Session is null)
+{
+    <p>Sessione non trovata.</p>
+}
+else
+{
+    @* Intestazione: informazioni principali della sessione ancora aperta *@
+    <div class="card mb-3">
+        <div class="card-body">
+            <div><strong>Posto:</strong> @Model.Session.ParkingSpot?.Code</div>
+            <div><strong>Auto:</strong> @Model.Session.Car?.Plate - @Model.Session.Car?.CarModel?.Make @Model.Session.Car?.CarModel?.Model</div>
+            <div><strong>Inizio (UTC):</strong> @Model.Session.StartUtc</div>
+        </div>
+    </div>
+
+    @* Riepilogo costi calcolati con la tariffa corrente (anteprima, senza sconti Premium) *@
+    @if (Model.CurrentTariff is not null)
+    {
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5>Riepilogo costi (anteprima)</h5>
+                <ul class="mb-2">
+                    <li>Minuti sosta: @Model.TotalMinutes (@Model.TotalHours.ToString("0.###") h)</li>
+                    <li>Energia ricaricata: @Model.EnergyKWh.ToString("0.###") kWh</li>
+                    <li>Tariffa sosta: € @Model.ParkingRatePerHour.ToString("0.00") /h</li>
+                    <li>Tariffa ricarica: € @Model.EnergyRatePerKWh.ToString("0.00") /kWh</li>
+                </ul>
+                <div><strong>Parziale sosta:</strong> € @Model.ParkingCost.ToString("0.00")</div>
+                <div><strong>Parziale ricarica:</strong> € @Model.EnergyCost.ToString("0.00")</div>
+                <div class="mt-2"><strong>Totale:</strong> € @Model.TotalCost.ToString("0.00")</div>
+                <small class="text-muted d-block mt-2">Gli eventuali sconti Premium saranno applicati alla conferma.</small>
+            </div>
+        </div>
+    }
+
+    @* Conferma di chiusura: OnPostConfirmAsync chiude la sessione, libera il posto, crea Payment + PaymentLines *@
+    <form method="post" asp-page-handler="Confirm">
+        <button type="submit" class="btn btn-success">Conferma e chiudi sessione</button>
+        <a asp-page="Index" class="btn btn-secondary ms-1">Annulla</a>
+    </form>
+}

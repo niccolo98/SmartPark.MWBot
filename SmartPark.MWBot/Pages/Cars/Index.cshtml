@@ -1,0 +1,64 @@
+﻿@page
+@model SmartPark.MWBot.Pages.Cars.IndexModel
+@{
+    ViewData["Title"] = "Le mie auto";
+}
+
+<h2>Le mie auto</h2>
+
+@* Messaggi flash per errori/operazioni riuscite (dal PageModel via TempData) *@
+@if (TempData["Err"] is string err && !string.IsNullOrWhiteSpace(err))
+{
+    <div class="alert alert-danger">@err</div>
+}
+@if (TempData["Msg"] is string msg && !string.IsNullOrWhiteSpace(msg))
+{
+    <div class="alert alert-success">@msg</div>
+}
+
+<p>
+    @* Link alla pagina di creazione di una nuova auto *@
+    <a asp-page="Create" class="btn btn-primary">Aggiungi auto</a>
+</p>
+
+@* Stato “lista vuota” *@
+@if (Model.Items.Count == 0)
+{
+    <p>Nessuna auto registrata.</p>
+}
+else
+{
+    @* Tabella delle auto dell’utente corrente *@
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Targa</th>
+                <th>Modello</th>
+                <th>Capacità (kWh)</th>
+                <th></th> @* Azioni *@
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var c in Model.Items)
+            {
+                <tr>
+                    <td>@c.Plate</td>
+                    <td>@($"{c.CarModel?.Make} {c.CarModel?.Model}")</td>
+                    <td>@c.CarModel?.BatteryCapacityKWh</td>
+                    <td class="text-end">
+                        @* Azione di eliminazione:
+                           - invia POST all’handler OnPostDeleteAsync nel PageModel
+                           - conferma lato client via confirm()
+                           Nota: il PageModel blocca l’eliminazione se l’auto ha sessioni collegate *@
+                        <form method="post"
+                              asp-page-handler="Delete"
+                              asp-route-id="@c.Id"
+                              onsubmit="return confirm('Eliminare questa auto? L’operazione non è reversibile.');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Elimina</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

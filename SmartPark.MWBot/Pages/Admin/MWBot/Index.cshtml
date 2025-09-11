@@ -1,0 +1,150 @@
+﻿@page
+@model SmartPark.MWBot.Pages.Admin.MWBot.IndexModel
+@{
+    ViewData["Title"] = "MWBot - Controllo";
+}
+
+<h2>MWBot — Controllo e coda</h2>
+
+@* Messaggi flash da TempData: errori e conferme delle azioni admin *@
+@if (TempData["Err"] is string err && !string.IsNullOrWhiteSpace(err))
+{
+    <div class="alert alert-danger">@err</div>
+}
+@if (TempData["Msg"] is string msg && !string.IsNullOrWhiteSpace(msg))
+{
+    <div class="alert alert-success">@msg</div>
+}
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5>Stato MWBot</h5>
+                @* Se non esiste record MWBot a DB, lo segnalo chiaramente *@
+                @if (Model.Bot is null)
+                {
+                    <div class="text-danger">Nessun MWBot configurato.</div>
+                }
+                else
+                {
+                    @* Pannello riepilogo stato corrente del bot (busy, potenza, batteria, posto, timestamp) *@
+                    <ul class="mb-2">
+                        <li><strong>Busy:</strong> @(Model.Bot.IsBusy ? "Sì" : "No")</li>
+                        <li><strong>Potenza max:</strong> @Model.Bot.MaxPowerKW kW</li>
+                        <li><strong>Batteria:</strong> @(Model.Bot.BatteryPercent?.ToString() ?? "—") %</li>
+                        <li><strong>Posto attuale:</strong> @(Model.Bot.CurrentSpotId?.ToString() ?? "—")</li>
+                        <li><strong>Ultimo update (UTC):</strong> @Model.Bot.LastUpdateUtc</li>
+                    </ul>
+                    @* Avvia il primo job in coda (disabilitato se il bot è occupato) *@
+                    <form method="post" asp-page-handler="StartNext">
+                        <button class="btn btn-primary" type="submit" @(Model.Bot.IsBusy ? "disabled" : null)>Avvia prossimo in coda</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5>Job in esecuzione</h5>
+                @* Mostra il job Running (se presente) con dettagli della richiesta e della sessione *@
+                @if (Model.RunningJob is null)
+                {
+                    <div>Nessun job in esecuzione.</div>
+                }
+                else
+                {
+                    var j = Model.RunningJob;
+                    var r = Model.RunningRequest;
+
+                    <div class="mb-2">
+                        <div><strong>Job Id:</strong> @j.Id</div>
+                        <div><strong>Inizio (UTC):</strong> @j.StartUtc</div>
+                        @* Informazioni di contesto della richiesta (sessione, posto, auto, target SoC) *@
+                        @if (r != null)
+                        {
+                            <div><strong>Sessione:</strong> @r.ParkingSession?.Id</div>
+                            <div><strong>Posto:</strong> @r.ParkingSession?.ParkingSpot?.Code</div>
+                            <div><strong>Auto:</strong> @r.ParkingSession?.Car?.Plate - @r.ParkingSession?.Car?.CarModel?.Make @r.ParkingSession?.Car?.CarModel?.Model</div>
+                            <div><strong>Target SoC:</strong> @r.TargetSoCPercent %</div>
+                        }
+                    </div>
+
+                    @* Form per terminare il job con i parametri simulati:
+                       - energyKWh: energia erogata (dato di fatturazione)
+                       - finalSoCPercent: SoC finale (informativo)
+                       Il pulsante "Abort" usa un handler differente via formaction *@
+                    <form method="post" class="row g-2" asp-page-handler="Finish">
+                        <input type="hidden" name="jobId" value="@j.Id" />
+                        <div class="col-md-3">
+                            <label class="form-label">Energia (kWh)</label>
+                            <input name="energyKWh" class="form-control" type="number" step="0.01" min="0" value="6" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">SoC finale (%)</label>
+                            <input name="finalSoCPercent" class="form-control" type="number" min="0" max="100" value="80" />
+                        </div>
+                        <div class="col-md-6 align-self-end">
+                            <button class="btn btn-success" type="submit">Termina job</button>
+                            <button class="btn btn-outline-danger ms-2" type="submit" formaction="?handler=Abort" name="jobId" value="@j.Id">Abort</button>
+                        </div>
+                    </form>
+                }
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h5>Coda</h5>
+                @* Tabella dei job in coda (stato Queued) con azioni Avvia/Abort per singolo job *@
+                @if (!Model.Queue.Any())
+                {
+                    <div>Nessun job in coda.</div>
+                }
+                else
+                {
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Job</th>
+                                <th>Sessione</th>
+                                <th>Posto</th>
+                                <th>Auto</th>
+                                <th>Richiesta (UTC)</th>
+                                <th>Target %</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Queue)
+                            {
+                                <tr>
+                                    <td>@item.Job.Id</td>
+                                    <td>@item.Req.ParkingSession?.Id</td>
+                                    <td>@item.Req.ParkingSession?.ParkingSpot?.Code</td>
+                                    <td>@(item.Req.ParkingSession?.Car?.Plate) - @item.Req.ParkingSession?.Car?.CarModel?.Make @item.Req.ParkingSession?.Car?.CarModel?.Model</td>
+                                    <td>@item.Req.RequestedAtUtc</td>
+                                    <td>@item.Req.TargetSoCPercent</td>
+                                    <td>
+                                        @* Avvio esplicito di un job specifico *@
+                                        <form method="post" class="d-inline" asp-page-handler="Start">
+                                            <input type="hidden" name="jobId" value="@item.Job.Id" />
+                                            <button class="btn btn-sm btn-primary" type="submit">Avvia</button>
+                                        </form>
+                                        @* Annullamento del job (resta traccia come Aborted) *@
+                                        <form method="post" class="d-inline" asp-page-handler="Abort">
+                                            <input type="hidden" name="jobId" value="@item.Job.Id" />
+                                            <button class="btn btn-sm btn-outline-danger" type="submit">Abort</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+</div>

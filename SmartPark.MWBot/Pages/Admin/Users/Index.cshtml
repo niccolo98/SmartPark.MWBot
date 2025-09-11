@@ -1,0 +1,61 @@
+﻿@page
+@model SmartPark.MWBot.Pages.Admin.Users.IndexModel
+@{
+    ViewData["Title"] = "Gestione utenti";
+}
+
+<h2>Utenti</h2>
+
+@* Messaggio di conferma operazioni (es. toggle Admin riuscito) *@
+@if (TempData["Msg"] is string msg && !string.IsNullOrWhiteSpace(msg))
+{
+    <div class="alert alert-success">@msg</div>
+}
+
+@* Stato vuoto: nessun utente nella lista *@
+@if (Model.Items.Count == 0)
+{
+    <div class="alert alert-info">Nessun utente trovato.</div>
+}
+else
+{
+    @* Elenco utenti con informazioni principali e azioni amministrative *@
+    <table class="table table-sm">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Tipo</th>
+                <th>Sconto Sosta</th>
+                <th>Sconto Ricarica</th>
+                <th>Admin</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @* Ogni riga rappresenta un utente applicativo (ApplicationUser) *@
+            @foreach (var u in Model.Items)
+            {
+                <tr>
+                    <td>@u.Email</td>
+                    <td>@u.Type</td>
+                    @* Gli sconti sono memorizzati come frazioni (0..1): qui vengono mostrati in percentuale *@
+                    <td>@(u.ParkingDiscount.HasValue ? (u.ParkingDiscount.Value * 100).ToString("0.#") + " %" : "—")</td>
+                    <td>@(u.ChargingDiscount.HasValue ? (u.ChargingDiscount.Value * 100).ToString("0.#") + " %" : "—")</td>
+                    <td>@(u.IsAdmin ? "Sì" : "No")</td>
+                    <td>
+                        @* Link alla pagina di edit dove l’admin può cambiare Type e sconti *@
+                        <a asp-page="Edit" asp-route-id="@u.Id" class="btn btn-sm btn-outline-primary">Modifica</a>
+
+                        @* Toggle del ruolo Admin: invia POST all’handler OnPostToggleAdminAsync *@
+                        <form method="post" asp-page-handler="ToggleAdmin" class="d-inline">
+                            <input type="hidden" name="id" value="@u.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                @(u.IsAdmin ? "Rimuovi Admin" : "Rendi Admin")
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

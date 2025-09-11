@@ -1,0 +1,50 @@
+﻿@page "{id:int}"
+@model SmartPark.MWBot.Pages.Sessions.RequestChargeModel
+@{
+    ViewData["Title"] = "Richiedi ricarica";
+}
+<h2>Richiedi ricarica</h2>
+
+@* Se la sessione non esiste o non appartiene all’utente corrente, il PageModel mette Session a null *@
+@if (Model.Session is null)
+{
+    <p>Sessione non trovata.</p>
+}
+else
+{
+    @* Dati di contesto per l’utente: posto e auto su cui verrà eseguita la ricarica *@
+    <div class="mb-3">
+        <strong>Posto:</strong> @Model.Session.ParkingSpot?.Code<br />
+        <strong>Auto:</strong> @Model.Session.Car?.Plate - @Model.Session.Car?.CarModel?.Make @Model.Session.Car?.CarModel?.Model
+    </div>
+
+    @* Form di richiesta ricarica:
+       - TargetSoCPercent: percentuale desiderata a fine ricarica
+       - InitialSoCPercent: percentuale attuale (opzionale), utile per stime e coerenza
+       Validazioni lato client sono agganciate ai DataAnnotations del PageModel *@
+    <form method="post">
+        <div class="mb-3">
+            <label class="form-label">Target SoC %</label>
+            <input asp-for="Input.TargetSoCPercent" class="form-control" />
+            <span asp-validation-for="Input.TargetSoCPercent" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">SoC attuale % (opzionale)</label>
+            <input asp-for="Input.InitialSoCPercent" class="form-control" />
+            <span asp-validation-for="Input.InitialSoCPercent" class="text-danger"></span>
+        </div>
+
+        @* Submit:
+           OnPostAsync nel PageModel:
+           - verifica che non esistano richieste duplicate attive per la stessa sessione
+           - calcola una stima di attesa (in base alla coda) e crea una ChargeRequest "Proposed"
+           - redirect alla pagina di conferma (ConfirmCharge) dove l’utente accetta o rifiuta *@
+        <button type="submit" class="btn btn-primary">Invia richiesta</button>
+        <a asp-page="Index" class="btn btn-secondary">Annulla</a>
+    </form>
+
+    @section Scripts {
+        @* Abilita validazione client-side (jquery.validate + unobtrusive) *@
+        <partial name="_ValidationScriptsPartial" />
+    }
+}

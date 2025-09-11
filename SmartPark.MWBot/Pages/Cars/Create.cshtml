@@ -1,0 +1,39 @@
+﻿@page
+@model SmartPark.MWBot.Pages.Cars.CreateModel
+@{
+    ViewData["Title"] = "Aggiungi auto";
+}
+
+<h2>Aggiungi auto</h2>
+
+@* Form di inserimento di una nuova auto dell’utente.*@
+<form method="post">
+    <div class="mb-3">
+        <label class="form-label">Modello</label>
+        @* Select popolata lato server con i CarModel disponibili *@
+        <select asp-for="Input.CarModelId" class="form-select">
+            <option value="">-- seleziona --</option>
+            @foreach (var m in Model.AvailableModels)
+            {
+                <option value="@m.Id">@m.Make @m.Model (@m.BatteryCapacityKWh kWh)</option>
+            }
+        </select>
+        <span asp-validation-for="Input.CarModelId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Targa</label>
+        @* La targa viene normalizzata in OnPost (Trim + ToUpperInvariant) e verificata per univocità *@
+        <input asp-for="Input.Plate" class="form-control" />
+        <span asp-validation-for="Input.Plate" class="text-danger"></span>
+    </div>
+
+    @* Azioni: conferma o annulla (torna alla lista) *@
+    <button type="submit" class="btn btn-primary">Salva</button>
+    <a asp-page="Index" class="btn btn-secondary">Annulla</a>
+</form>
+
+@section Scripts {
+    @* Abilita la validazione client-side (jquery.validate + unobtrusive) per i DataAnnotations *@
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,54 @@
+﻿@page
+@model SmartPark.MWBot.Pages.Sessions.CreateModel
+@{
+    ViewData["Title"] = "Nuova sessione";
+}
+<h2>Nuova sessione di parcheggio</h2>
+
+@* Mostra gli errori di validazione lato client (jquery.validate) inclusi dal partial *@
+<partial name="_ValidationScriptsPartial" />
+
+@* Riepilogo errori lato server basati sulle DataAnnotations/ModelState *@
+<div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+
+@* Form per creare una nuova ParkingSession.
+   Il PageModel:
+   - carica MyCars (auto dell’utente) e FreeSpots (posti liberi)
+   - valida che il posto sia ancora libero e che non ci siano sessioni aperte confliggenti
+   - marca il posto come occupato e salva la sessione *@
+<form method="post">
+    <div class="mb-3">
+        <label class="form-label">Posto</label>
+        @* Select dei posti liberi; l’elenco è calcolato in OnGet() (Model.FreeSpots) *@
+        <select asp-for="Input.ParkingSpotId" class="form-select">
+            <option value="">-- seleziona --</option>
+            @foreach (var s in Model.FreeSpots)
+            {
+                <option value="@s.Id">@s.Code</option>
+            }
+        </select>
+        <span asp-validation-for="Input.ParkingSpotId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Auto</label>
+        @* Select delle auto dell’utente corrente (targa + modello) *@
+        <select asp-for="Input.CarId" class="form-select">
+            <option value="">-- seleziona --</option>
+            @foreach (var c in Model.MyCars)
+            {
+                <option value="@c.Id">@c.Plate - @c.CarModel?.Make @c.CarModel?.Model</option>
+            }
+        </select>
+        <span asp-validation-for="Input.CarId" class="text-danger"></span>
+    </div>
+
+    @* Submit: invia POST allo stesso PageModel (OnPostAsync) *@
+    <button type="submit" class="btn btn-primary">Crea sessione</button>
+    <a asp-page="Index" class="btn btn-secondary">Annulla</a>
+</form>
+
+@section Scripts {
+    @* Abilita validazione client-side per i campi vincolati dalle DataAnnotations *@
+    <partial name="_ValidationScriptsPartial" />
+}

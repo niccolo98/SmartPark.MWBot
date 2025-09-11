@@ -1,0 +1,50 @@
+﻿@page
+@model SmartPark.MWBot.Pages.Admin.Tariffs.IndexModel
+@{
+    ViewData["Title"] = "Tariffe";
+}
+
+<h2>Tariffa Corrente</h2>
+
+@* Se non esiste una tariffa “attiva” (GetCurrentAsync ha restituito null) mostro un messaggio informativo *@
+@if (Model.Current is null)
+{
+    <p>Nessuna tariffa attiva.</p>
+}
+else
+{
+    @* Riepilogo della tariffa in vigore *@
+    <ul>
+        <li>€ /h sosta: @Model.Current.ParkingPerHour</li>
+        <li>€ /kWh: @Model.Current.EnergyPerKWh</li>
+        <li>Valida da: @Model.Current.ValidFromUtc (UTC)</li>
+        <li>Valida a: @(Model.Current.ValidToUtc?.ToString() ?? "—")</li>
+    </ul>
+}
+
+<hr />
+<h3>Imposta nuova tariffa</h3>
+
+@* Form per creare una NUOVA tariffa.
+   Nel PageModel (OnPostNewAsync):
+   - chiude la tariffa corrente impostando ValidToUtc = now-1s (se presente),
+   - crea una nuova Tariff con ValidFromUtc = now
+   In questo modo manteniamo lo storico e non alteriamo i pagamenti passati. *@
+<form method="post" asp-page-handler="New">
+    <div class="mb-2">
+        <label>€ /h sosta</label>
+        <input asp-for="Input.ParkingPerHour" class="form-control" />
+        <span asp-validation-for="Input.ParkingPerHour" class="text-danger"></span>
+    </div>
+    <div class="mb-2">
+        <label>€ /kWh</label>
+        <input asp-for="Input.EnergyPerKWh" class="form-control" />
+        <span asp-validation-for="Input.EnergyPerKWh" class="text-danger"></span>
+    </div>
+    <button class="btn btn-primary" type="submit">Salva</button>
+</form>
+
+@section Scripts {
+    @* Abilita la validazione client-side per i DataAnnotations del modello *@
+    <partial name="_ValidationScriptsPartial" />
+}
