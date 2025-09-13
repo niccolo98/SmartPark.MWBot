@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using SmartPark.MWBot.Data;   // DbContext
-using SmartPark.MWBot.Models; // ApplicationUser
+using SmartPark.MWBot.Data;   
+using SmartPark.MWBot.Models; 
 
 var builder = WebApplication.CreateBuilder(args);
 

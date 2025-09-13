@@ -10,8 +10,8 @@ namespace SmartPark.MWBot.Pages.Admin.Users
 {
     // Pagina amministrativa per modificare le proprietà custom dell'utente:
     // - Type (Base/Premium)
-    // - ParkingDiscount / ChargingDiscount (0..1)
-    // Richiede ruolo Admin.
+    // - Sconti come PERCENTUALI 0..100 (in UI), salvati come frazioni 0..1 nel database
+    // Motivo: evitare problemi di localizzazione (virgola/punto) con input come "0.1".
     [Authorize(Roles = "Admin")]
     public class EditModel : PageModel
     {
@@ -38,12 +38,12 @@ namespace SmartPark.MWBot.Pages.Admin.Users
             [Required]
             public UserType Type { get; set; }    // Base/Premium
 
-            // Sconti come frazioni decimali (0..1). Validazione lato server.
-            [Range(0, 1, ErrorMessage = "Inserire un valore tra 0 e 1 (es. 0.1 = 10%)")]
-            public double? ParkingDiscount { get; set; }
+            // In UI usiamo percentuali (0..100) per evitare ambiguità con separatori decimali.
+            [Range(0, 100, ErrorMessage = "Inserire un valore tra 0 e 100")]
+            public double? ParkingDiscountPercent { get; set; }
 
-            [Range(0, 1, ErrorMessage = "Inserire un valore tra 0 e 1 (es. 0.1 = 10%)")]
-            public double? ChargingDiscount { get; set; }
+            [Range(0, 100, ErrorMessage = "Inserire un valore tra 0 e 100")]
+            public double? ChargingDiscountPercent { get; set; }
         }
 
         // GET: carica i dati dell'utente per precompilare il form
@@ -57,8 +57,9 @@ namespace SmartPark.MWBot.Pages.Admin.Users
             {
                 Id = user.Id,
                 Type = user.Type,
-                ParkingDiscount = user.ParkingDiscount,
-                ChargingDiscount = user.ChargingDiscount
+                // Converti da frazione (0..1) a percentuale (0..100) per la UI
+                ParkingDiscountPercent = user.ParkingDiscount.HasValue ? user.ParkingDiscount.Value * 100.0 : (double?)null,
+                ChargingDiscountPercent = user.ChargingDiscount.HasValue ? user.ChargingDiscount.Value * 100.0 : (double?)null
             };
             return Page();
         }
@@ -73,8 +74,9 @@ namespace SmartPark.MWBot.Pages.Admin.Users
 
             // Aggiorna i campi custom sull'utente
             user.Type = Input.Type;
-            user.ParkingDiscount = Normalize(Input.ParkingDiscount);
-            user.ChargingDiscount = Normalize(Input.ChargingDiscount);
+            // Converti da percentuale (0..100) a frazione (0..1) e clampa entro i limiti
+            user.ParkingDiscount = ToFraction(Input.ParkingDiscountPercent);
+            user.ChargingDiscount = ToFraction(Input.ChargingDiscountPercent);
 
             // Persistenza via UserManager (gestisce concurrency stamp, validazioni Identity, ecc.)
             var res = await _userManager.UpdateAsync(user);
@@ -89,16 +91,14 @@ namespace SmartPark.MWBot.Pages.Admin.Users
             return RedirectToPage("Index");          // ritorna alla lista
         }
 
-        // Normalizza il valore sconto:
-        // - null rimane null,
-        // - valori < 0 portati a 0,
-        // - valori > 1 portati a 1.
-        private double? Normalize(double? value)
+        // Converte da percentuale (0..100) a frazione (0..1) con clamp e gestione null.
+        private double? ToFraction(double? percent)
         {
-            if (!value.HasValue) return null;
-            if (value.Value < 0) return 0;
-            if (value.Value > 1) return 1;
-            return value.Value;
+            if (!percent.HasValue) return null;
+            var p = percent.Value;
+            if (p < 0) p = 0;
+            if (p > 100) p = 100;
+            return p / 100.0;
         }
     }
 }

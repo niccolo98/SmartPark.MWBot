@@ -39,17 +39,17 @@
                 </select>
             </div>
 
-            @* Sconti memorizzati come frazioni (0..1): 0.1=10%, 0.15=15% *@
+            @* In UI usiamo percentuali 0–100; il PageModel converte in frazioni 0–1 per il salvataggio *@
             <div class="mb-3">
-                <label class="form-label">Sconto sosta (0–1)</label>
-                <input asp-for="Input.ParkingDiscount" class="form-control" placeholder="es. 0.1 = 10%" />
-                <span asp-validation-for="Input.ParkingDiscount" class="text-danger"></span>
+                <label class="form-label">Sconto sosta (%)</label>
+                <input asp-for="Input.ParkingDiscountPercent" class="form-control" type="number" step="0.1" min="0" max="100" />
+                <span asp-validation-for="Input.ParkingDiscountPercent" class="text-danger"></span>
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Sconto ricarica (0–1)</label>
-                <input asp-for="Input.ChargingDiscount" class="form-control" placeholder="es. 0.15 = 15%" />
-                <span asp-validation-for="Input.ChargingDiscount" class="text-danger"></span>
+                <label class="form-label">Sconto ricarica (%)</label>
+                <input asp-for="Input.ChargingDiscountPercent" class="form-control" type="number" step="0.1" min="0" max="100" />
+                <span asp-validation-for="Input.ChargingDiscountPercent" class="text-danger"></span>
             </div>
 
             @* Azioni: salva modifiche o torna alla lista *@
