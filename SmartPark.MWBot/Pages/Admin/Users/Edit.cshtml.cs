@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using SmartPark.MWBot.Models;
 using System.ComponentModel.DataAnnotations;
-using System.Threading.Tasks;
 
 namespace SmartPark.MWBot.Pages.Admin.Users
 {

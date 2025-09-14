@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using SmartPark.MWBot.Models;
 using System.Security.Claims;
-using System.Threading.Tasks;
+
 
 namespace SmartPark.MWBot.Pages.Sessions
 {

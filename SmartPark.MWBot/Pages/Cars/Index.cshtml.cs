@@ -2,9 +2,8 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc;                // <-- per IActionResult
 using SmartPark.MWBot.Models;
-using System.Collections.Generic;
 using System.Security.Claims;
-using System.Threading.Tasks;
+
 
 namespace SmartPark.MWBot.Pages.Cars
 {

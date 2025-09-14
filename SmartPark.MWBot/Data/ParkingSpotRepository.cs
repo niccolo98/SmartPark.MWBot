@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SmartPark.MWBot.Models;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+
 
 namespace SmartPark.MWBot.Data
 {
