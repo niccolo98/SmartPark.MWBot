@@ -111,15 +111,15 @@ else
     app.UseHsts();                     // abilita HSTS (sicurezza HTTP)
 }
 
-app.UseHttpsRedirection(); // forza HTTPS
-app.UseStaticFiles();      // abilita wwwroot (css/js/img)
+app.UseHttpsRedirection(); 
+app.UseStaticFiles();      
 
-app.UseRouting();          // attiva il routing endpoint
+app.UseRouting();          
 
-app.UseAuthentication();   // identifica l'utente (cookie/identity)
-app.UseAuthorization();    // applica policy/ruoli/authorize
+app.UseAuthentication();   
+app.UseAuthorization();    
 
-// Mapping delle Razor Pages (endpoints)
+
 app.MapRazorPages();
 
-app.Run(); // avvio dell'app
+app.Run(); 
