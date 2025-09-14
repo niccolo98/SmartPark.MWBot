@@ -23,7 +23,10 @@
 }
 else
 {
-    @* Tabella con l’elenco delle sessioni aperte (caricate nel PageModel con ListOpenByUserAsync) *@
+    @* Tabella con l’elenco delle sessioni aperte (caricate nel PageModel con ListOpenByUserAsync).
+       Per ogni sessione controlliamo Model.HasActiveCharge[SessionId]:
+       - true  => mostra badge "Ricarica in corso"
+       - false => mostra bottone "Richiedi ricarica" *@
     <table class="table">
         <thead>
             <tr>
@@ -36,13 +39,22 @@ else
         <tbody>
             @foreach (var s in Model.Items)
             {
+                var hasActive = Model.HasActiveCharge.TryGetValue(s.Id, out var a) && a;
+
                 <tr>
                     <td>@s.ParkingSpot?.Code</td>
                     <td>@($"{s.Car?.Plate} - {s.Car?.CarModel?.Make} {s.Car?.CarModel?.Model}")</td>
                     <td>@s.StartUtc</td>
                     <td>
-                        @* Richiesta ricarica: apre la pagina di richiesta/accettazione per questa sessione *@
-                        <a asp-page="RequestCharge" asp-route-id="@s.Id" class="btn btn-sm btn-outline-primary">Richiedi ricarica</a>
+                        @* Se c'è una ricarica attiva (Pending/InProgress) mostro badge, altrimenti il link *@
+                        @if (hasActive)
+                        {
+                            <span class="badge bg-warning text-dark">Ricarica in corso</span>
+                        }
+                        else
+                        {
+                            <a asp-page="RequestCharge" asp-route-id="@s.Id" class="btn btn-sm btn-outline-primary">Richiedi ricarica</a>
+                        }
 
                         @* Checkout: chiude la sessione, libera il posto e genera il pagamento (pagina di conferma) *@
                         <a asp-page="Checkout" asp-route-id="@s.Id" class="btn btn-sm btn-success ms-1">Chiudi &amp; Checkout</a>
